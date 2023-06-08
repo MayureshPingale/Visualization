@@ -1,0 +1,197 @@
+<!doctype html>
+<html>
+    <head>
+    
+        <title>Lab 2</title>
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">        
+        <link rel="stylesheet" href="{{url_for('static', filename='css/base.css')}}">
+        <link rel="stylesheet" href="{{url_for('static', filename='css/navigation.css')}}">
+
+    </head>
+    
+    <body>
+
+        <nav class="navbar">
+            <div class="logo">Visualization Lab 2</div>            
+            <ul class="nav-links">
+                <div class="menu">
+                    <li><a href="/">Data</a></li>
+                    <li><a href="/pca">Scree-Plot</a></li>
+                    <li class = "active"><a href="/biplot">Bi-Plot</a></li>
+                    <li><a href="/scatterplot">Scatter-Plot Matrix </a></li>
+                    <li><a href="/kmeans">K-Means </a></li>
+                </div>
+            </ul>
+        </nav>
+
+        <h2 class="title"></h2>
+        <div id="biplot" style="text-align: center;"></div>
+    <script>
+
+
+
+        d3.select(".title").text("BiPlot");
+        var da = {{data|tojson}};
+
+        var margin = {top: 50, right: 20, bottom: 120, left: 120};
+        var widthContainer = 550, heightContainer = 550;
+        var colorsK = ["#fa7645","#592173","#2ad34d","#85aae1","#f1fa45"];
+
+
+        const effective_width= widthContainer - margin.left - margin.right;
+        const effective_height= heightContainer - margin.top - margin.bottom;
+
+        var svg = d3.select("#biplot")
+                    .append("svg")
+                    .attr("width", widthContainer)
+                    .attr("height", heightContainer)
+                    .append("g")
+                    .attr("transform",
+                          "translate(" + margin.left + "," + margin.top + ")");
+
+
+        var tooltip = d3.select("#biplot")
+            .append("div")
+            .style("opacity", 0)
+            .attr("class", "tooltip")
+            .style("border", "2px solid black")
+            .style("border-radius", "5px")
+            .style("padding", "10px")
+            .style("color", "#192E47")
+            .style("position" ,"absolute")
+
+
+        var hideTooltip = function(d) {
+                tooltip
+                    .transition()
+                    .duration(200)
+                    .style("opacity", 0)
+        }
+        
+              
+        var pc1 = da["top_two_features"].map(function(i) {return i[0]});
+        var pc2 = da["top_two_features"].map(function(i) {return i[1]});
+
+        var xScale = d3.scaleLinear()
+                    .domain([d3.min(pc1), d3.max(pc1)])
+                    .range([0, effective_width])
+        
+        var yScale = d3.scaleLinear()
+            .range([effective_height, 0])
+            .domain([d3.min(pc2), d3.max(pc2)]);
+
+        svg.append("g").call(d3.axisLeft(yScale));
+        svg.append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", -margin.left)
+                    .attr("x",- effective_height/ 2)
+                    .attr("dy", "3em")
+                    .attr("class", "axis-label")
+                    .text("PC 2");
+        
+        svg.append("g")
+        .attr("transform", "translate(0," + (heightContainer - margin.top - margin.bottom) + ")")
+        .call(d3.axisBottom(xScale));
+
+        svg.append("text")
+            .attr("transform", "translate(" + effective_width/ 2 + " ," + (heightContainer - margin.bottom + 20) + ")")
+            .attr("class", "axis-label")
+            .text("PC 1");
+
+
+        svg.append("g")
+                        .selectAll("dot")
+                        .data(pc1)
+                        .enter()
+                            .append("circle")
+                            .attr("cx", function(d, i) { return xScale(pc1[i])})
+                            .attr("cy", function(d, i) { return yScale(pc2[i])})
+                            .attr("r", 5)
+                            .style("fill", function(d,i) {return colorsK[da["colors"][i]]});
+        
+
+
+        let point_coordinate=0.25;
+        let node= svg.append('g');
+
+        node.selectAll('.line')
+            .data(da["loadings"])
+            .enter()
+            .append('line')
+                .style("stroke", "black")
+                .style("stroke-width", 1.5)
+                .attr("x1", function(d) { return xScale(0)})
+                .attr("y1", function(d) { return yScale(0)})
+                .attr("x2", function(d) { return  xScale(point_coordinate)})
+                .attr("y2", function(d) { return yScale((-d[1]/d[0])*point_coordinate)});
+
+            node.selectAll('text')
+            .data(da["loadings"])
+            .enter()
+            .append("text")
+            .attr("x", function(d,i) { return xScale(point_coordinate)})
+            .attr("y", function(d,i){ return yScale((-d[1]/d[0])*point_coordinate)})
+            .style("font-size", "13px")
+            .text(function(d, i) { return da["col"][i]; })
+            .on("mouseover", function(d,i) {
+                console.log(d3.event.pageY);
+                console.log(d3.event.pageX);
+                console.log("Done");
+
+                tooltip
+                    .transition()
+                    .duration(100);
+                    
+                tooltip
+                    .html(da["col"][i])
+                    .style("left", (d3.event.pageX + 20) + "px")
+                    .style("top", (d3.event.pageY - 20) + "px")
+                    .style("opacity", 1)
+
+            })
+            .on("mouseleave", hideTooltip );
+    
+        console.log(da["loadings"]);
+
+        var legendItemSize = 12;
+        var legendSpacing = 5;
+        var xOffset = 150;
+        var yOffset = 0;
+        
+        var legend = d3.select("#biplot")
+                    .append('svg')
+                    .attr("width", 300)
+                    .attr("height", 300)
+                    .style("margin-bottom", 200)
+                    .selectAll('.legendItem')
+                    .data(colorsK);
+        
+        //Create legend items
+        legend
+        .enter()
+        .append('rect')
+        .attr('class', 'legendItem')
+        .attr('width', legendItemSize)
+        .attr('height', legendItemSize)
+        .style('fill', d => d)
+        .attr('transform',
+                        (d, i) => {
+                            var x = xOffset;
+                            var y = yOffset + (legendItemSize + legendSpacing) * i;
+                            return `translate(${x}, ${y})`;
+                        });
+        
+        //Create legend labels
+        legend
+        .enter()
+        .append('text')
+        .attr('x', xOffset + legendItemSize + 5)
+        .attr('y', (d, i) => yOffset + (legendItemSize + legendSpacing) * i + 12)
+        .text((d, i) => "Cluster " + (i+1));  
+
+
+      </script>
+   </body>
+</html>

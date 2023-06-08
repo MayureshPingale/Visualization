@@ -1,0 +1,65 @@
+
+button {
+  width: 112.5px;
+  height: 37.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  background: #192e47;
+ font-size: 14px;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.15);
+  background: #192e47;
+  margin-left: auto;
+  margin-right: auto;
+ }
+ 
+ button, button span {
+  transition: 200ms;
+ }
+ 
+ button .text {
+  transform: translateX(25px);
+  color: white;
+ }
+ 
+ button .icon {
+  position: absolute;
+  border-left: 1px solid #93a7bf;
+  transform: translateX(86px);
+  height: 27px;
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+ }
+ 
+ button svg {
+  width: 22px;
+   height: 30px;
+    transform: translateY(3px);
+  fill: #eee;
+ }
+ 
+ button:hover {
+  background: #8497ad;
+ }
+ 
+ button:hover .text {
+  color: transparent;
+ }
+ 
+ button:hover .icon {
+  width: 112.5px;
+  border-left: none;
+  transform: translateX(0);
+ }
+ 
+ button:focus {
+  outline: none;
+ }
+ 
+ button:active .icon svg {
+  transform: scale(1);
+ }

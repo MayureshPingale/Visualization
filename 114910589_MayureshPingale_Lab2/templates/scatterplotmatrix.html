@@ -1,0 +1,243 @@
+<!doctype html>
+<html>
+    <head>
+    
+        <title>Lab 2</title>
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+        <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+
+
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">        
+        <link rel="stylesheet" href="{{url_for('static', filename='css/base.css')}}">
+        <link rel="stylesheet" href="{{url_for('static', filename='css/navigation.css')}}">
+        <link rel="stylesheet" href="{{url_for('static', filename='css/tabular.css')}}">
+    </head>
+
+    <body>
+        
+        <nav class="navbar">
+            <div class="logo">Visualization Lab 2</div>            
+            <ul class="nav-links">
+                <div class="menu">
+                    <li><a href="/">Data</a></li>
+                    <li><a href="/pca">Scree-Plot</a></li>
+                    <li><a href="/biplot">Bi-Plot</a></li>
+                    <li class = "active"><a href="/scatterplot">Scatter-Plot Matrix </a></li>
+                    <li><a href="/kmeans">K-Means </a></li>
+                </div>
+            </ul>
+        </nav>
+
+        
+        <h2 class="title"></h2>
+        <div id="table" style="text-align: center;"></div>
+        <h4 style="text-align: center; margin-left: auto; margin-right: auto; margin-top: 2%" >Color Legend</h4>
+        <div id= "legend" style="text-align: center; margin-left: auto; margin-right: auto; margin-top: -6%;">
+            <svg id="my_dataviz3" height=300 width=300></svg>
+        </div>
+
+        <div id="graph" style="text-align: center; margin-left: auto; margin-right: auto; margin-top: -4%"> </div>
+        
+    <script>
+        d3.select(".title").text("Scatterplot-Matrix");
+
+        var all_data = {{data|tojson}};
+        var original_data = JSON.parse(all_data["original_data"])
+        var top_4_attributes_loadings = JSON.parse(all_data["top_4_attributes_loadings"]);
+        var table_strings='<table style="border: 1px solid black; margin-left: auto; margin-right: auto">';
+
+        
+        var pc_list = []
+        var features_list= []
+
+        Object.keys(top_4_attributes_loadings).map(function(name, index){
+                pc_list.push(name);
+        });
+
+        Object.keys(top_4_attributes_loadings[pc_list[0]]).map(function(name1,index){
+            features_list.push(name1);
+        })
+
+        table_strings+='<thead><tr><th>Features</th>';
+        for(let j=0;j<pc_list.length;j++){
+            table_strings+='<th>'+pc_list[j]+'</th>';
+        }
+        table_strings+='</tr></thead>';
+
+        for(let i=0;i<4;i++){
+            table_strings+='<tr><td><b>'+features_list[i]+'</b></td>';
+
+            for(let j=0;j<pc_list.length;j++){
+                table_strings+='<td>'+top_4_attributes_loadings[pc_list[j]][features_list[i]]+'</td>';
+            }
+
+            table_strings+='</tr>';
+        }
+        table_strings+='</table>';
+
+        $("#table").html(table_strings);
+        
+        var width = 1000;
+        var size = 250;
+        var padding = 30;
+        var x = d3.scaleLinear().range([padding/2, size - padding/2]);
+        var y = d3.scaleLinear().range([size - padding/2, padding/2]);
+
+        const colorK=["#592171","#2ad33d","#85aad1","#f1fa45", "#fa7645"];
+
+        var xScale = d3.axisBottom(x).tickFormat(function(d){ return d;});
+        var yScale = d3.axisLeft(y).tickFormat(function(d){ return d;});
+
+        xScale.tickSize(size * features_list.length);
+        yScale.tickSize(-size * features_list.length);
+
+
+        var maxMinValues = {};
+        features_list.forEach(function(val) {
+            maxMinValues[val] = [d3.min(d3.values(original_data[val])) , d3.max(d3.values(original_data[val]))];
+        });
+
+        var svg = d3.select("#graph")
+                        .append("svg")
+                        .attr('id', 'chart')
+                        .attr("width", (size  * features_list.length) + padding + 600)
+                        .attr("height", (size * features_list.length) + padding)
+                        .style("margin-left", "250px")
+                        .style("margin-right", "auto")
+                        .style("margin-top", "30px")
+                        .style("text-align" ,  "center")
+                        .style("display", "block")
+                        .append("g")
+                        .attr("transform", "translate(" + (padding + 100) + "," + padding / 2 + ")");
+
+        svg.selectAll(".x-axis")
+            .data(features_list)
+            .enter().append("g")
+            .attr("class", "x axis")
+            .attr("transform", function(d, i) { return "translate(" + (i) * size + ",0)"; })
+            .each(function(d) { x.domain(maxMinValues[d]); d3.select(this).call(xScale); });
+
+        svg.selectAll(".y-axis")
+            .data(features_list)
+            .enter().append("g")
+            .attr("class", "y axis")
+            .attr("transform", function(d, i) { return "translate(0," + i * size + ")"; })
+            .each(function(d) { y.domain(maxMinValues[d]); d3.select(this).call(yScale); });
+
+            function matrix_data(a) {
+                var li = [];
+                for (let i = 0; i < a.length; i++) {
+                    for (let j = 0; j < a.length;j++){
+
+                            li.push({x: a[i], i: i, y: a[j], j: j});
+                    }
+                }
+                
+                return li;
+            }
+
+            let matrix_data_all_cells = matrix_data(features_list);
+
+            var cell = svg.selectAll(".cell")
+            .data(matrix_data_all_cells)
+            .enter().append("g")
+            .attr("class", function(d) {return "cell"+(d.i)+d.j;})
+            .attr("transform", function(d) { return "translate(" + (d.i) * size + "," + d.j * size + ")"; });
+
+
+            for(let i=0;i<16;i++){
+
+                let cell_val =matrix_data_all_cells[i];
+
+
+                x.domain(maxMinValues[String(cell_val.x)]);
+                y.domain(maxMinValues[String(cell_val.y)]);
+                
+                d3.selectAll("g.cell"+(cell_val.i)+cell_val.j)
+                    .append("rect")
+                        .attr("id", "frame")
+                        .attr("class","rec")
+                        .attr("x", padding / 2)
+                        .attr("y", padding / 2)
+                        .attr("width", size - padding)
+                        .attr("height", size - padding)
+                        .style("fill","#e7e7e7")
+                        .style("fill-opacity",0.7);
+
+                
+                if(cell_val.i == cell_val.j)
+                    continue;
+
+                let first_value = original_data[String(cell_val.x)];
+                let second_value = d3.values(original_data[String(cell_val.y)]);
+                let final_data_plot = []
+                
+                d3.values(first_value).forEach(function(item, i) {
+                    let individual_point = {};
+                    individual_point["x"] = item;
+                    individual_point["y"] = second_value[i];
+                    individual_point["color"] = original_data["color"][i];
+                    final_data_plot.push(individual_point);
+                });
+                
+                d3.selectAll("g.cell"+(cell_val.i)+cell_val.j)
+                    .selectAll("circle")
+                        .data(final_data_plot)
+                        .enter().append("circle")
+                        .attr("cx", function(d) { return x(d.x); })
+                        .attr("cy", function(d) { return y(d.y); })
+                        .attr("r", 3)
+                        .style("fill", function(d) { return  colorK[d.color]});
+        }
+
+
+        cell.filter(function(d) { return d.i === d.j; })
+            .append("text")
+                .attr("x", size/2-padding)
+                .attr("y", size/2-padding)
+                .attr("dx","-3.5em")
+                .attr("dy", "1.5em")
+                .style("font-weight", "bold")
+                .style("font-size", "15px")
+                .style("text-align", "center")
+                .text(function(d) { return d.x; });
+
+
+    var SVG = d3.select("#my_dataviz3")
+    
+    // create a list of keys
+    var keys = ["Cluster 1", "Cluster 2", "Cluster 3", "Cluster 4", "Cluster 5"]
+
+    // Usually you have a color scale in your chart already
+    var color = d3.scaleOrdinal()
+    .domain(keys)
+    .range(d3.schemeSet1);
+
+    // Add one dot in the legend for each name.
+    var size = 20
+    SVG.selectAll("mydots")
+    .data(keys)
+    .enter()
+    .append("rect")
+        .attr("x", 100)
+        .attr("y", function(d,i){ return 100 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
+        .attr("width", size)
+        .attr("height", size)
+        .style("fill", function(d,i){ return colorK[i]})
+
+    // Add one dot in the legend for each name.
+    SVG.selectAll("mylabels")
+    .data(keys)
+    .enter()
+    .append("text")
+        .attr("x", 100 + size*1.2)
+        .attr("y", function(d,i){ return 100 + i*(size+5) + (size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
+        .style("fill", function(d,i){ return colorK[i]})
+        .text(function(d){ return d})
+        .attr("text-anchor", "left")
+        .style("alignment-baseline", "middle")
+
+      </script>
+   </body>
+</html>

@@ -1,0 +1,62 @@
+<html>
+    <head>
+        <script src="https://cdn.plot.ly/plotly-2.20.0.min.js" charset="utf-8"></script>
+        
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+        <style>
+            .modebar-container {
+                opacity: 0;
+            }
+        </style>
+</head>
+
+<body>
+    <div id='myDiv'><!-- Plotly chart will be drawn inside this DIV --></div>
+
+    <script>
+
+        function sunBurstRequest(selectedCountry){
+            $.ajax({
+                type: "GET",
+                data: {
+                    country: selectedCountry,
+                },
+                url: '/sunburst',
+                dataType: "json",
+                contentType: 'application/json;charset=UTF-8',
+                success: function (data) {
+                    drawSunburst(data);
+                }
+            });
+        }
+
+        function drawSunburst(input_values) {
+
+            console.log(input_values)
+
+            var data = [{
+            type: "sunburst",
+            labels: [input_values[0], "Education", "Population", "Electricty", "UnEmployment", "Internet", "PrePrimary", "Primary", "Secondary", "Rural", "Urban", "Male", "Female"],
+            parents: ["", input_values[0], input_values[0], input_values[0], input_values[0], input_values[0], "Education", "Education", "Education", "Population", "Population", "UnEmployment", "UnEmployment"],
+            values:  input_values,
+            outsidetextfont: {size: 20, color: "#377eb8"},
+            leaf: {opacity: 0.4},
+            marker: {line: {width: 2}},
+            }];
+
+            var layout = {
+            margin: {l: 0, r: 0, b: 0, t: 0},
+            width: 500,
+            height: 500
+            };
+
+
+            Plotly.newPlot('myDiv', data, layout);
+        }
+
+
+        sunBurstRequest("India");
+
+    </script>
+</body>
+</html>

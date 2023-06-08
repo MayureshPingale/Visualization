@@ -1,0 +1,48 @@
+<html>
+    <head>
+    
+        <title>Lab 1</title>
+        <script src="https://d3js.org/d3.v4.min.js"></script>
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+        
+        <link rel="stylesheet" href="css/base.css">
+        <link rel="stylesheet" href="css/toggleButton.css">
+        <link rel="stylesheet" href="css/dropdown-Button.css">
+        <link rel="stylesheet" href="css/radioButton.css">
+        <link rel="stylesheet" href="css/navigation.css">
+    
+    </head>
+
+    <body>
+        <nav class="navbar">
+            <div class="logo">Visualization Lab 1</div>
+            <ul class="nav-links">
+                <div class="menu">
+                    <li><a href="index.html">Data</a></li>
+                    <li><a href="barChart.html">Bar Chart</a></li>
+                    <li class="active"><a href="histogramChart.html">Histogram</a></li>
+                    <li><a href="ScatterplotChart.html">Scatter Plot</a></li>
+                </div>
+            </ul>
+        </nav>
+            
+
+        <script src="js/histogram.js"></script>
+
+            <h2 class="title"></h2>
+        
+        <div class ="toggleButtonDiv">
+            Vertical
+            <input type="checkbox" id="switch" class="checkbox" />
+            <label for="switch" class="toggle"> </label>
+            Horizontal
+        </div>
+
+        
+        <div class="dropdownDiv">
+            Variable: 
+            <select class="dropdownOption"></select>
+        </div>
+
+    </body>
+</html>

@@ -1,0 +1,131 @@
+<!doctype html>
+<html>
+    <head>
+    
+        <title>Lab 2</title>
+
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">              
+        <link rel="stylesheet" href="{{url_for('static', filename='css/base.css')}}">
+        <link rel="stylesheet" href="{{url_for('static', filename='css/navigation.css')}}">
+
+    </head>
+    
+    <body>
+
+        <nav class="navbar">
+            <div class="logo">Visualization Lab 2</div>            
+            <ul class="nav-links">
+                <div class="menu">
+                    <li><a href="/">Data</a></li>
+                    <li><a href="/parallel_plot">PCP plot</a></li>
+                    <li><a href="/mds_data_plot">MDS Data Plot</a></li>
+                    <li><a href="/mds_variable_plot">MDS Variables Plot</a></li>
+                    <li class = "active"><a href="/kmeans">K-Means </a></li>
+                </div>
+            </ul>
+        </nav>
+
+        <h2 class="title"></h2>
+        <div id="kmean" style="text-align: center;"></div>
+
+    <script>
+        d3.select(".title").text("KMeans Elbow Method Plot");
+
+        var kmeans = {{data|tojson}};
+
+        var margin = {top: 50, right: 20, bottom: 120, left: 120};
+        var widthContainer = 550, heightContainer = 550;
+
+        const effective_width= widthContainer - margin.left - margin.right;
+        const effective_height= heightContainer - margin.top - margin.bottom;
+
+        var svg = d3.select("#kmean")
+                    .append("svg")
+                    .attr("width", widthContainer)
+                    .attr("height", heightContainer)
+                    .append("g")
+                    .attr("transform",
+                          "translate(" + margin.left + "," + margin.top + ")");
+
+        var xScale = d3.scaleLinear()
+                    .domain([0, 20])
+                    .range([0, effective_width])
+        
+        var yScale = d3.scaleLinear()
+            .range([effective_height, 0])
+            .domain([0, d3.max(kmeans)]);
+
+        svg.append("g").call(d3.axisLeft(yScale));
+        svg.append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", -margin.left)
+                    .attr("x",- effective_height/ 2)
+                    .attr("dy", "2.5em")
+                    .attr("class", "axis-label")
+                    .text("Inertia");
+        
+        svg.append("g")
+        .attr("transform", "translate(0," + (heightContainer - margin.top - margin.bottom) + ")")
+        .call(d3.axisBottom(xScale))
+
+        svg.append("text")
+            .attr("transform", "translate(" + effective_width/ 2 + " ," + (heightContainer - margin.bottom + 35) + ")")
+            .attr("class", "axis-label")
+            .text("Values of K");
+
+
+        svg.append("path")
+            .datum(kmeans)
+            .attr("stroke", "#192E47")
+            .attr("fill", "none")
+            .attr("stroke-width", 2)
+            .attr("d", d3.line()
+                .x(function(d,i) { return xScale(i+1)})
+                .y(function(d) { return yScale(d) }));
+
+        svg.selectAll("myCircles")
+        .data(kmeans)
+        .enter()
+            .append("circle")
+            .attr("fill", "#192E47")
+            .attr("stroke", "none")
+            .attr("cx", function(d,i) { return xScale(i+1)})
+            .attr("cy", function(d) { return yScale(d) })
+            .attr("r", 5)
+
+        svg.append('g')
+            .append('line')
+                .style("stroke", "black")
+                .style("stroke-width", 1)
+                .attr("x1", function(d) { return xScale(1)})
+                .attr("y1", function(d) { return yScale(kmeans[0])})
+                .attr("x2", function(d) { return  xScale(19)})
+                .attr("y2", function(d) { return yScale(kmeans[18])});
+
+        var xmid = (xScale(1) + xScale(19)) / 2;
+        var ymid = (yScale(kmeans[0]) + yScale(kmeans[18]))/ 2;
+
+
+        svg.append('g')
+            .append('line')
+                .style("stroke", "red")
+                .style("stroke-width", 1.5)
+                .attr("x1", function(d) { return xScale(5)})
+                .attr("y1", function(d) { return yScale(kmeans[4])})
+                .attr("x2", function(d) { return  xmid})
+                .attr("y2", function(d) { return  ymid});
+
+        svg.append("circle")
+            .attr("fill", "red")
+            .attr("stroke", "none")
+            .attr("cx", function(d,i) { return xScale(5)})
+            .attr("cy", function(d) { return yScale(kmeans[4]) })
+            .attr("r", 5)
+
+
+      </script>
+   </body>
+</html>

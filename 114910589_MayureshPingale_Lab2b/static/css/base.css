@@ -1,0 +1,25 @@
+.title {
+    font-family: Title_lab2;
+    text-align: center;
+    padding-bottom: 5px;
+    margin-top: 3%;
+    font-size: 50px;
+}
+
+
+.bar-chart {
+    text-align: center;
+    display: block; 
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.axis-label {
+    text-anchor: middle;
+    font-weight: bolder;
+}
+
+@font-face {
+    font-family: Title_lab2;
+    src: url(Fosterama-K71VX.ttf);
+}

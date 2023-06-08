@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+    <head>
+    
+        <title>Lab 2</title>
+        <script src="https://d3js.org/d3.v3.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">        
+        <link rel="stylesheet" href="{{url_for('static', filename='css/base.css')}}">
+        <link rel="stylesheet" href="{{url_for('static', filename='css/navigation.css')}}">
+
+        <script src="http://d3js.org/d3.v3.min.js"></script>
+
+        <link rel="stylesheet" type="text/css" href="https://syntagmatic.github.io/parallel-coordinates/d3.parcoords.css">
+        <script type="text/javascript" src="https://syntagmatic.github.io/parallel-coordinates/d3.parcoords.js"></script>
+
+    </head>
+    
+    <body>
+
+        <nav class="navbar">
+            <div class="logo">Visualization Lab 2</div>            
+            <ul class="nav-links">
+                <div class="menu">
+                    <li><a href="/">Data</a></li>
+                    <li class = "active"><a href="/parallel_plot">PCP Plot</a></li>
+                    <li><a href="/mds_data_plot">MDS Data Plot</a></li>
+                    <li><a href="/mds_variable_plot">MDS Variables Plot</a></li>
+                    <li><a href="/kmeans">K-Means </a></li>
+                </div>
+            </ul>
+        </nav>
+        <h2 class="title"></h2>
+        <div id="legendDiv"></div>
+        <div id="example" class="parcoords" style="margin-top: -10%; margin-left: auto; margin-right: auto; height: 500px; width: 1400px;"></div>
+
+        <script>
+                d3.select(".title").text("Parallel Co-ordinates Plot");
+
+                var da = {{data|tojson}};
+                var dap = JSON.parse(da["all_df"]);
+                console.log(dap);
+                var sele = JSON.parse(da["selected_df"]);
+                //var colorsK = ["#de7eb5","#592173","#2ad34d","#85aae1","#f57a7a"];
+                var colorsK = ["#764bdb","#4FC1E8","#81CC31","#FCBA12","#ED5564"];
+
+
+                var parcoords = d3.parcoords()("#example")
+                    .data(dap)
+                    .hideAxis(["color"])
+                    .color(function(d) { return colorsK[d.color] })
+                    .margin({ top: 40, left: 50, bottom: 12, right: 0 })
+                    .mode("queue")
+                    .render()
+                    .reorderable()
+                    .brushMode("1D-axes");  
+
+                parcoords.svg.selectAll("text")
+                    .style("font", "10px sans-serif");
+                
+                parcoords.svg.selectAll(".label")
+                    .attr("y", -15)
+
+                    var legendItemSize = 12;
+                    var legendSpacing = 5;
+                    var xOffset = 150;
+                    var yOffset = 0;
+                    
+                    var legend = d3.select("#legendDiv")
+                                .append('svg')
+                                .attr("width", 300)
+                                .attr("height", 300)
+                                .style("margin-left", "40%")
+                                .selectAll('.legendItem')
+                                .data(colorsK);
+                    
+                    //Create legend items
+                    legend
+                    .enter()
+                    .append('rect')
+                    .attr('class', 'legendItem')
+                    .attr('width', legendItemSize)
+                    .attr('height', legendItemSize)
+                    .style('fill', d => d)
+                    .attr('transform',
+                                    (d, i) => {
+                                        var x = xOffset;
+                                        var y = yOffset + (legendItemSize + legendSpacing) * i;
+                                        return `translate(${x}, ${y})`;
+                                    });
+                    
+                    //Create legend labels
+                    legend
+                    .enter()
+                    .append('text')
+                    .attr('x', xOffset + legendItemSize + 5)
+                    .attr('y', (d, i) => yOffset + (legendItemSize + legendSpacing) * i + 12)
+                    .text((d, i) => "Cluster " + (i+1));  
+     
+        </script>
+
+
+   </body>
+</html>
